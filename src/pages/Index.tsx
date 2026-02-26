@@ -3,14 +3,12 @@ import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-grocery.png";
 import ProductCard from "@/components/ProductCard";
 import Header from "@/components/Header";
-import { products, categories } from "@/data/products";
+import { categories } from "@/data/products";
+import { useProducts } from "@/hooks/useProducts";
 
 const Index = () => {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-
-  const filteredProducts = activeCategory
-    ? products.filter((p) => p.category === activeCategory)
-    : products;
+  const { data: products = [], isLoading } = useProducts(activeCategory);
 
   return (
     <div className="min-h-screen bg-background">
@@ -49,9 +47,7 @@ const Index = () => {
           <button
             onClick={() => setActiveCategory(null)}
             className={`shrink-0 rounded-full px-5 py-2.5 text-sm font-medium transition-colors ${
-              !activeCategory
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-accent"
+              !activeCategory ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
             }`}
           >
             All
@@ -61,9 +57,7 @@ const Index = () => {
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
               className={`shrink-0 rounded-full px-5 py-2.5 text-sm font-medium transition-colors ${
-                activeCategory === cat.id
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:bg-accent"
+                activeCategory === cat.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
               }`}
             >
               {cat.icon} {cat.name}
@@ -75,18 +69,23 @@ const Index = () => {
       {/* Products */}
       <section id="products" className="container mx-auto px-4 pb-16">
         <h2 className="mb-6 text-2xl font-bold text-foreground">
-          {activeCategory
-            ? categories.find((c) => c.id === activeCategory)?.name
-            : "All Products"}
+          {activeCategory ? categories.find((c) => c.id === activeCategory)?.name : "All Products"}
         </h2>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="aspect-square animate-pulse rounded-2xl bg-muted" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-border bg-muted/50 py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
           <p>© 2026 FreshMart. Fresh groceries delivered to your door.</p>

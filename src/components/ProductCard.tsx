@@ -1,10 +1,10 @@
-import { Product } from "@/types/product";
 import { useCart } from "@/context/CartContext";
 import { Plus, Star } from "lucide-react";
 import { Link } from "react-router-dom";
+import type { DbProduct } from "@/hooks/useProducts";
 
 interface ProductCardProps {
-  product: Product;
+  product: DbProduct;
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
@@ -12,7 +12,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
   return (
     <div className="group relative rounded-2xl border border-border bg-card p-3 shadow-product transition-all duration-300 hover:shadow-product-hover hover:-translate-y-1">
-      {product.originalPrice && (
+      {product.original_price && (
         <span className="absolute left-4 top-4 z-10 rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">
           Sale
         </span>
@@ -40,12 +40,10 @@ const ProductCard = ({ product }: ProductCardProps) => {
         <p className="text-xs text-muted-foreground">per {product.unit}</p>
         <div className="flex items-center justify-between pt-1">
           <div className="flex items-baseline gap-1.5">
-            <span className="text-lg font-bold text-foreground">
-              ${product.price.toFixed(2)}
-            </span>
-            {product.originalPrice && (
+            <span className="text-lg font-bold text-foreground">${product.price.toFixed(2)}</span>
+            {product.original_price && (
               <span className="text-sm text-muted-foreground line-through">
-                ${product.originalPrice.toFixed(2)}
+                ${product.original_price.toFixed(2)}
               </span>
             )}
           </div>

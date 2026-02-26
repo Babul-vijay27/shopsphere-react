@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Leaf } from "lucide-react";
 import Header from "@/components/Header";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -9,11 +11,36 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const { signIn, signUp, user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Redirect if already logged in
+  if (user) {
+    navigate("/");
+    return null;
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Placeholder — would connect to auth
-    alert(isSignUp ? "Account created!" : "Logged in!");
+    setSubmitting(true);
+    try {
+      if (isSignUp) {
+        const { error } = await signUp(email, password, name);
+        if (error) throw error;
+        toast({ title: "Account created!", description: "Please check your email to verify your account." });
+      } else {
+        const { error } = await signIn(email, password);
+        if (error) throw error;
+        toast({ title: "Welcome back!" });
+        navigate("/");
+      }
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -29,18 +56,14 @@ const Login = () => {
               {isSignUp ? "Create your account" : "Welcome back"}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              {isSignUp
-                ? "Join FreshMart for fresh groceries"
-                : "Sign in to your FreshMart account"}
+              {isSignUp ? "Join FreshMart for fresh groceries" : "Sign in to your FreshMart account"}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-foreground">
-                  Full Name
-                </label>
+                <label className="mb-1.5 block text-sm font-medium text-foreground">Full Name</label>
                 <input
                   type="text"
                   value={name}
@@ -52,9 +75,7 @@ const Login = () => {
               </div>
             )}
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-foreground">
-                Email
-              </label>
+              <label className="mb-1.5 block text-sm font-medium text-foreground">Email</label>
               <input
                 type="email"
                 value={email}
@@ -65,9 +86,7 @@ const Login = () => {
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-foreground">
-                Password
-              </label>
+              <label className="mb-1.5 block text-sm font-medium text-foreground">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -76,6 +95,7 @@ const Login = () => {
                   className="w-full rounded-xl border border-input bg-background px-4 py-2.5 pr-10 text-sm outline-none transition-colors focus:border-primary"
                   placeholder="••••••••"
                   required
+                  minLength={6}
                 />
                 <button
                   type="button"
@@ -87,28 +107,29 @@ const Login = () => {
               </div>
             </div>
 
+            {!isSignUp && (
+              <Link to="/forgot-password" className="block text-right text-sm text-primary hover:underline">
+                Forgot password?
+              </Link>
+            )}
+
             <button
               type="submit"
-              className="w-full rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+              disabled={submitting}
+              className="w-full rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
             >
-              {isSignUp ? "Create Account" : "Sign In"}
+              {submitting ? "Please wait..." : isSignUp ? "Create Account" : "Sign In"}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-            <button
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="font-semibold text-primary hover:underline"
-            >
+            <button onClick={() => setIsSignUp(!isSignUp)} className="font-semibold text-primary hover:underline">
               {isSignUp ? "Sign in" : "Sign up"}
             </button>
           </p>
 
-          <Link
-            to="/"
-            className="mt-4 block text-center text-sm text-muted-foreground hover:text-foreground"
-          >
+          <Link to="/" className="mt-4 block text-center text-sm text-muted-foreground hover:text-foreground">
             ← Back to store
           </Link>
         </div>
